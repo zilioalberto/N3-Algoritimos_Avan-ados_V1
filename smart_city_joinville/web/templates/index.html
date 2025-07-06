@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+    <html>
+    <head>
+        <title>Smart City Joinville</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    </head>
+    <body>
+        <h1>Smart City Joinville - Mapa Interativo</h1>
+        <div id="map"></div>
+        <form id="query-form">
+            <input type="text" id="question" name="question" placeholder="Faça uma pergunta (e.g., Qual o tráfego na Ottokar Doerffel?)">
+            <button type="submit">Consultar</button>
+        </form>
+        <pre id="response"></pre>
+        <script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initMap" async defer></script>
+        <script src="{{ url_for('static', filename='js/map.js') }}"></script>
+        <script>
+            document.getElementById('query-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const question = document.getElementById('question').value;
+                const response = await fetch('/query', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `question=${encodeURIComponent(question)}`
+                }).then(res => res.json());
+                document.getElementById('response').textContent = response.response;
+            });
+        </script>
+    </body>
+    </html>
