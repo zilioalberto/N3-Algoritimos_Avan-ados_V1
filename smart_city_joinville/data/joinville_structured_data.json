@@ -1,0 +1,166 @@
+{
+  "cidade": {
+    "nome": "Joinville",
+    "populacao": 600000,
+    "area_km2": 1126.3,
+    "estado": "SC"
+  },
+  "bairros": [
+    {
+      "nome": "América",
+      "populacao": 15000,
+      "area_km2": 5.0,
+      "ruas": [
+        {
+          "nome": "Ottokar Doerffel",
+          "extensao_km": 2.0
+        },
+        {
+          "nome": "Rua das Palmeiras",
+          "extensao_km": 1.5
+        },
+        {
+          "nome": "Avenida Santos Dumont",
+          "extensao_km": 3.2
+        },
+        {
+          "nome": "Rua do Comércio",
+          "extensao_km": 1.8
+        }
+      ]
+    },
+    {
+      "nome": "Atiradores",
+      "populacao": 12000,
+      "area_km2": 4.0,
+      "ruas": [
+        {
+          "nome": "Dona Francisca",
+          "extensao_km": 3.5
+        },
+        {
+          "nome": "Rua das Flores",
+          "extensao_km": 2.1
+        },
+        {
+          "nome": "Avenida Getúlio Vargas",
+          "extensao_km": 4.0
+        }
+      ]
+    },
+    {
+      "nome": "Centro",
+      "populacao": 25000,
+      "area_km2": 3.5,
+      "ruas": [
+        {
+          "nome": "Rua do Príncipe",
+          "extensao_km": 2.5
+        },
+        {
+          "nome": "Avenida Juscelino Kubitschek",
+          "extensao_km": 3.8
+        },
+        {
+          "nome": "Rua das Palmeiras",
+          "extensao_km": 1.2
+        }
+      ]
+    },
+    {
+      "nome": "Boa Vista",
+      "populacao": 18000,
+      "area_km2": 6.2,
+      "ruas": [
+        {
+          "nome": "Rua da Paz",
+          "extensao_km": 2.8
+        },
+        {
+          "nome": "Avenida Beira Rio",
+          "extensao_km": 4.5
+        },
+        {
+          "nome": "Rua das Acácias",
+          "extensao_km": 1.9
+        }
+      ]
+    },
+    {
+      "nome": "Guanabara",
+      "populacao": 22000,
+      "area_km2": 7.1,
+      "ruas": [
+        {
+          "nome": "Rua das Orquídeas",
+          "extensao_km": 3.1
+        },
+        {
+          "nome": "Avenida dos Imigrantes",
+          "extensao_km": 5.2
+        },
+        {
+          "nome": "Rua das Margaridas",
+          "extensao_km": 2.3
+        }
+      ]
+    },
+    {
+      "nome": "Itaum",
+      "populacao": 28000,
+      "area_km2": 8.5,
+      "ruas": [
+        {
+          "nome": "Rua das Azaleias",
+          "extensao_km": 3.7
+        },
+        {
+          "nome": "Avenida dos Ipês",
+          "extensao_km": 4.8
+        },
+        {
+          "nome": "Rua das Camélias",
+          "extensao_km": 2.6
+        }
+      ]
+    },
+    {
+      "nome": "Jardim Iririu",
+      "populacao": 32000,
+      "area_km2": 9.2,
+      "ruas": [
+        {
+          "nome": "Rua das Violetas",
+          "extensao_km": 3.4
+        },
+        {
+          "nome": "Avenida dos Cravos",
+          "extensao_km": 5.1
+        },
+        {
+          "nome": "Rua das Rosas",
+          "extensao_km": 2.9
+        }
+      ]
+    },
+    {
+      "nome": "Parque Guarani",
+      "populacao": 19000,
+      "area_km2": 5.8,
+      "ruas": [
+        {
+          "nome": "Rua dos Lírios",
+          "extensao_km": 2.7
+        },
+        {
+          "nome": "Avenida dos Girassóis",
+          "extensao_km": 4.3
+        },
+        {
+          "nome": "Rua dos Crisântemos",
+          "extensao_km": 2.0
+        }
+      ]
+    }
+  ]
+}

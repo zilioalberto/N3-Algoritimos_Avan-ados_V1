@@ -1,0 +1,1 @@
+# Módulo langchain para o projeto Smart City Joinville 

@@ -1,10 +1,8 @@
 from neo4j import GraphDatabase
-from langchain.graphs import Neo4jGraph
 
 class KnowledgeGraph:
     def __init__(self, uri, user, password):
         self.driver = GraphDatabase.driver(uri, auth=(user, password))
-        self.graph = Neo4jGraph(url=uri, username=user, password=password)
     
     def close(self):
         self.driver.close()
