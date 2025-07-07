@@ -3,27 +3,212 @@
     <head>
         <title>Smart City Joinville</title>
         <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+        <style>
+            .response-section {
+                margin: 1em 0;
+                padding: 1em;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+                background-color: #f9f9f9;
+            }
+            .cypher-query {
+                background-color: #f0f0f0;
+                padding: 0.5em;
+                border-radius: 3px;
+                font-family: monospace;
+                font-size: 0.9em;
+                margin: 0.5em 0;
+            }
+            .graph-data {
+                max-height: 200px;
+                overflow-y: auto;
+                background-color: #f5f5f5;
+                padding: 0.5em;
+                border-radius: 3px;
+                font-family: monospace;
+                font-size: 0.8em;
+            }
+            .status-conferido {
+                color: green;
+                font-weight: bold;
+            }
+            .status-nao-conferido {
+                color: orange;
+                font-weight: bold;
+            }
+            .loading {
+                color: #666;
+                font-style: italic;
+            }
+        </style>
     </head>
     <body>
         <h1>Smart City Joinville - Mapa Interativo</h1>
         <div id="map"></div>
         <form id="query-form">
-            <input type="text" id="question" name="question" placeholder="Faça uma pergunta (e.g., Qual o tráfego na Ottokar Doerffel?)">
+            <input type="text" id="question" name="question" placeholder="Faça uma pergunta sobre Joinville (e.g., Quantas ruas tem em Joinville? Quais são os bairros?)">
             <button type="submit">Consultar</button>
         </form>
-        <pre id="response"></pre>
+        
+        <div id="response-container" style="margin-top: 2em;">
+            <div id="llm-response" class="response-section" style="display: none;">
+                <h3>🤖 Resposta do Mistral AI</h3>
+                <div id="llm-content"></div>
+            </div>
+            
+            <div id="cypher-section" class="response-section" style="display: none;">
+                <h3>🔍 Consulta Cypher Gerada</h3>
+                <div id="cypher-query" class="cypher-query"></div>
+            </div>
+            
+            <div id="graph-data-section" class="response-section" style="display: none;">
+                <h3>📊 Dados do Grafo</h3>
+                <div id="graph-data" class="graph-data"></div>
+            </div>
+            
+            <div id="validation-section" class="response-section" style="display: none;">
+                <h3>🔎 Validação Externa</h3>
+                <div id="google-snippet"></div>
+                <div id="conferido-status"></div>
+            </div>
+            
+            <div id="bairros-comparacao" style="margin-top: 2em;"></div>
+        </div>
+        
         <script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initMap" async defer></script>
         <script src="{{ url_for('static', filename='js/map.js') }}"></script>
         <script>
+            function renderBairrosComparacao(data) {
+                if (!data.bairros_banco && !data.bairros_oficiais) {
+                    document.getElementById('bairros-comparacao').innerHTML = '';
+                    return;
+                }
+                
+                let html = '<div class="response-section"><h3>🏘️ Validação com Dados Oficiais</h3>';
+                html += '<div style="display: flex; gap: 2em; flex-wrap: wrap;">';
+                
+                // Bairros no banco
+                html += '<div><b>Bairros no banco:</b><ul>';
+                (data.bairros_banco || []).forEach(b => {
+                    const destaque = (data.comparacao && data.comparacao.so_no_banco && data.comparacao.so_no_banco.includes(b)) ? ' style="color:red;font-weight:bold"' : '';
+                    html += `<li${destaque}>${b}</li>`;
+                });
+                html += '</ul></div>';
+                
+                // Bairros oficiais
+                if (data.bairros_oficiais && data.bairros_oficiais.length > 0) {
+                    html += '<div><b>Bairros oficiais:</b><ul>';
+                    data.bairros_oficiais.forEach(b => {
+                        const destaque = (data.comparacao && data.comparacao.so_na_externa && data.comparacao.so_na_externa.includes(b)) ? ' style="color:blue;font-weight:bold"' : '';
+                        html += `<li${destaque}>${b}</li>`;
+                    });
+                    html += '</ul></div>';
+                }
+                
+                html += '</div>';
+                
+                // Estatísticas da comparação
+                if (data.comparacao) {
+                    html += '<div style="margin-top:1em;padding:0.5em;background-color:#f0f0f0;border-radius:3px;">';
+                    html += `<strong>Estatísticas:</strong> `;
+                    html += `${data.comparacao.total_banco || 0} no banco, `;
+                    html += `${data.comparacao.total_externa || 0} oficiais, `;
+                    html += `${data.comparacao.total_comum || 0} em comum`;
+                    html += '</div>';
+                }
+                
+                // Status da comparação
+                const tem_diferencas = (data.comparacao && data.comparacao.so_no_banco && data.comparacao.so_no_banco.length > 0) || 
+                                     (data.comparacao && data.comparacao.so_na_externa && data.comparacao.so_na_externa.length > 0);
+                
+                if (tem_diferencas) {
+                    html += '<div style="margin-top:1em;color:#b00;font-weight:bold">⚠️ Diferenças encontradas! Confira os bairros destacados.</div>';
+                } else {
+                    html += '<div style="margin-top:1em;color:green;font-weight:bold">✅ Dados validados com fonte oficial!</div>';
+                }
+                
+                html += '</div>';
+                document.getElementById('bairros-comparacao').innerHTML = html;
+            }
+            
+            function showSection(sectionId, show = true) {
+                const section = document.getElementById(sectionId);
+                if (section) {
+                    section.style.display = show ? 'block' : 'none';
+                }
+            }
+            
+            function clearAllSections() {
+                const sections = ['llm-response', 'cypher-section', 'graph-data-section', 'validation-section'];
+                sections.forEach(section => showSection(section, false));
+                document.getElementById('bairros-comparacao').innerHTML = '';
+            }
+            
             document.getElementById('query-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const question = document.getElementById('question').value;
-                const response = await fetch('/query', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: `question=${encodeURIComponent(question)}`
-                }).then(res => res.json());
-                document.getElementById('response').textContent = response.response;
+                
+                // Limpar seções anteriores
+                clearAllSections();
+                
+                // Mostrar loading
+                showSection('llm-response');
+                document.getElementById('llm-content').innerHTML = '<div class="loading">Consultando Mistral AI...</div>';
+                
+                try {
+                    const response = await fetch('/query', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: `question=${encodeURIComponent(question)}`
+                    }).then(res => res.json());
+                    
+                    if (response.response && typeof response.response === 'object') {
+                        const data = response.response;
+                        
+                        // Resposta do LLM
+                        document.getElementById('llm-content').innerHTML = data.resposta_llm || 'Sem resposta';
+                        
+                        // Consulta Cypher
+                        if (data.consulta_cypher) {
+                            showSection('cypher-section');
+                            document.getElementById('cypher-query').textContent = data.consulta_cypher;
+                        }
+                        
+                        // Dados do grafo
+                        if (data.dados_grafo && data.dados_grafo.length > 0) {
+                            showSection('graph-data-section');
+                            const graphDataStr = JSON.stringify(data.dados_grafo, null, 2);
+                            document.getElementById('graph-data').textContent = graphDataStr;
+                        }
+                        
+                        // Validação externa
+                        if (data.validacao_externa) {
+                            showSection('validation-section');
+                            const validation = data.validacao_externa;
+                            
+                            if (validation.snippet_google) {
+                                document.getElementById('google-snippet').innerHTML = 
+                                    `<strong>Google:</strong> ${validation.snippet_google}`;
+                            }
+                            
+                            const statusClass = validation.conferido ? 'status-conferido' : 'status-nao-conferido';
+                            const statusText = validation.conferido ? '✅ Conferido com fontes externas' : '⚠️ Não conferido com fontes externas';
+                            document.getElementById('conferido-status').innerHTML = 
+                                `<span class="${statusClass}">${statusText}</span>`;
+                        }
+                        
+                        // Validação com dados oficiais
+                        if (data.validacao_externa && data.validacao_externa.bairros_oficiais) {
+                            renderBairrosComparacao(data.validacao_externa);
+                        }
+                        
+                    } else {
+                        document.getElementById('llm-content').innerHTML = response.response || 'Erro na consulta';
+                    }
+                    
+                } catch (error) {
+                    document.getElementById('llm-content').innerHTML = `Erro: ${error.message}`;
+                }
             });
         </script>
     </body>
